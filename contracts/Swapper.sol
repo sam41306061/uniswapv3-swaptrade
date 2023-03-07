@@ -24,6 +24,18 @@ contract Swapper {
         uint24 _fee,
         uint256 _amountIn // how much we want to swap
     ) public{
+        //check transfer success/fail
+        require(
+            IERC20(_path[0]).transferFrom(msg.sender, address(this), _amountIn),
+            'Transfer Failed!!'
+        );
+        // approved trade
+        require(
+            IERC20(_path[0]).approve(SWAP_ROUTER, _amountIn),
+            'Approval Failed!'
+        );
+
+
         // build perams, boiler plate
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
@@ -37,8 +49,24 @@ contract Swapper {
                 sqrtPriceLimitX96: 0
             });
         // swap
-       uint256 amoutOut = ISwapRouter(SWAP_ROUTER).exactInputSingle(params);
+       uint256 amountOut = ISwapRouter(SWAP_ROUTER).exactInputSingle(params);
         //transfer crypto
         IERC20(_path[1]).transfer(msg.sender, amountOut);
     }
+
+    //always include these fuctions in defi contracts
+    // withdraw any excess eth to wallet
+    function withdrawETH() public {
+        require(msg.sender == owner);
+        (bool success, ) = owner.call{value: address(this).balance}("");
+        require(success);
+    }
+    // withdraw any excess tokens , not eth
+    function withdrawTokens(address _token) public {
+        require(msg.sender == owner);
+        require(
+            IERC20(_token).transfer(owner, IERC20(_token).balanceOf(address(this)))
+        );
+    }
+
 }
