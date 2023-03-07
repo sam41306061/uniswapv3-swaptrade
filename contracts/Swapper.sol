@@ -24,11 +24,11 @@ contract Swapper {
         uint24 _fee,
         uint256 _amountIn // how much we want to swap
     ) public{
-        // build perams
+        // build perams, boiler plate
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: 'address1',
-                tokenOut: 'address2',
+                tokenIn: _path[0],
+                tokenOut: _path[1],
                 fee: _fee,
                 recipient: address(this), // can use msg.sender here to
                 deadline: block.timestamp,
@@ -37,7 +37,8 @@ contract Swapper {
                 sqrtPriceLimitX96: 0
             });
         // swap
-        ISwapRouter(SWAP_ROUTER).exactInputSingle(params);
+       uint256 amoutOut = ISwapRouter(SWAP_ROUTER).exactInputSingle(params);
         //transfer crypto
+        IERC20(_path[1]).transfer(msg.sender, amountOut);
     }
 }
